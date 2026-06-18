@@ -5,7 +5,7 @@
 
 概要：パソコン画面上に​親近感の​ある​オブジェクトを​配置する．​AIに​紐づいた​チャット機能を​有する．​
 
-使いたい​技術：Python3​（開発言語），​PySide6​（GUIフレームワーク），​OpenAI API​（AIチャット機能），​VoiceVox Engine​（音声合成機能），​requests​（通信ライブラリ）​
+使いたい​技術：Python3​（開発言語），​PySide6​（GUIフレームワーク），​Gemini API​（AIチャット機能），​VoiceVox Engine​（音声合成機能），​requests​（通信ライブラリ）​
 pngまたは​gif​（キャラクタ表示），​PyInstaller​（実行形式）​
 
 作らない​もの​：スケジューリング機能等の​拡張性は​一旦​考慮しない．​

@@ -20,3 +20,5 @@ config/settings.json
 .idea/
 
 logs/
+
+data/

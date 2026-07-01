@@ -18,3 +18,5 @@ config/settings.json
 # IDE
 .vscode/
 .idea/
+
+logs/

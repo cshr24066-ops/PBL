@@ -60,3 +60,21 @@ class SettingsManager:
                 indent=4,
                 ensure_ascii=False
             )
+    
+    def save_character_position(self, x: int, y: int):
+
+        settings = self.load_settings()
+
+        settings["character_x"] = x
+        settings["character_y"] = y
+
+        self.save_settings(settings)
+    
+    def get_character_position(self):
+
+        settings = self.load_settings()
+
+        return (
+            settings["character_x"],
+            settings["character_y"]
+        )

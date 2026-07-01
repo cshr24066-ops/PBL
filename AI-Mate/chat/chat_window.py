@@ -2,21 +2,20 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QTextEdit,
-    QLineEdit,
     QPushButton,
-    QMessageBox
 )
 
-from chat.chat_manager import ChatManager
+from PySide6.QtCore import Signal
 
+from chat.input_text_edit import InputTextEdit
 
 class ChatWindow(QWidget):
+    
+    send_requested = Signal(str)
 
     def __init__(self):
 
         super().__init__()
-
-        self.chat_manager = ChatManager()
 
         self.setup_ui()
 
@@ -31,13 +30,15 @@ class ChatWindow(QWidget):
         self.history_area = QTextEdit()
         self.history_area.setReadOnly(True)
 
-        self.input_box = QLineEdit()
+        self.input_box = InputTextEdit()
+        self.input_box.setMaximumHeight(70)
 
         self.send_button = QPushButton("送信")
 
         self.send_button.clicked.connect(
-            self.send_message
+            self.on_send_button_clicked
         )
+
 
         layout.addWidget(self.history_area)
         layout.addWidget(self.input_box)
@@ -45,32 +46,25 @@ class ChatWindow(QWidget):
 
         self.setLayout(layout)
 
-    def send_message(self):
 
-        text = self.input_box.text()
+        self.input_box.send_requested.connect(
+            self.send_requested.emit
+        )
 
-        success = self.chat_manager.send(text)
-
-        if not success:
-
-            QMessageBox.warning(
-                self,
-                "入力エラー",
-                "メッセージを入力してください"
-            )
-
-            return
-
-        self.refresh_history()
-
-        self.input_box.clear()
-
-    def refresh_history(self):
+    def refresh_history(self, history):
 
         self.history_area.clear()
 
-        for message in self.chat_manager.get_history():
+        for message in history:
 
-            self.history_area.append(
-                f"{message.sender}: {message.text}"
-            )
+            self.append_message(message)
+            
+    def append_message(self, message):
+
+        self.history_area.append(
+            f"{message.sender}: {message.text}"
+        )
+    
+    def on_send_button_clicked(self):
+
+        self.input_box.submit()

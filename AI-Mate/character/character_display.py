@@ -3,7 +3,8 @@ from pathlib import Path
 from PySide6.QtCore import (
     Qt,
     QPoint,
-    QSize
+    QSize,
+    Signal
 )
 
 from PySide6.QtGui import QMovie
@@ -14,13 +15,24 @@ from PySide6.QtWidgets import (
 )
 
 from character.character_state import CharacterState
+from config.settings_manager import SettingsManager
 
 
 class CharacterDisplay(QLabel):
 
-    def __init__(self, image_paths: dict):
+    clicked = Signal()
+    exit_requested = Signal()
+    position_changed = Signal(int, int)
+    state_changed = Signal(CharacterState)
 
+    def __init__(
+            self, 
+            image_paths: dict
+    ):
+        
         super().__init__()
+
+        self.settings_manager = SettingsManager()
 
         self.state = CharacterState.IDLE
 
@@ -36,6 +48,11 @@ class CharacterDisplay(QLabel):
 
         # GIF読み込み
         self._load_gif()
+
+        # ドラッグ中かどうかのフラグ
+        self.dragging = False
+
+        
 
     def _setup_window(self):
         """
@@ -80,6 +97,8 @@ class CharacterDisplay(QLabel):
         )
 
         self._set_movie(str(image_file))
+        x, y = self.settings_manager.get_character_position()
+        self.move(x, y)
 
     def mousePressEvent(self, event):
 
@@ -97,15 +116,23 @@ class CharacterDisplay(QLabel):
                 - self.drag_position
             )
 
+        self.dragging = True
+
     def mouseReleaseEvent(self, event):
 
         if event.button() == Qt.MouseButton.LeftButton:
 
-            print(
+            self.position_changed.emit(
                 self.x(),
                 self.y()
             )
-    
+
+            if not self.dragging:
+
+                self.clicked.emit()
+
+        self.dragging = False
+                
     def contextMenuEvent(self, event):
         """
         右クリックメニュー
@@ -120,7 +147,7 @@ class CharacterDisplay(QLabel):
         )
 
         if selected_action == exit_action:
-            self.close()
+            self.exit_requested.emit()
 
     def change_state(self, state):
         """
@@ -135,3 +162,6 @@ class CharacterDisplay(QLabel):
             return
 
         self._set_movie(gif_path)
+        self.state_changed.emit(state)
+
+    

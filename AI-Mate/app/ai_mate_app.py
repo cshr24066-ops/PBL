@@ -18,7 +18,11 @@ class AIMateApp:
 
     def __init__(self):
         self.gemini = GeminiClient()
-        self.voicevox = VoicevoxClient()
+        self.settings_manager = SettingsManager()
+
+        self.voicevox = VoicevoxClient(
+            self.settings_manager.get_voicevox_settings()
+        )
         self.audio_player = AudioPlayer()
 
         self.chat = ChatWindow()
@@ -35,7 +39,6 @@ class AIMateApp:
         }
 
         self.character = CharacterDisplay(self.gifs)
-        self.settings_manager = SettingsManager()
         self.chat_manager = ChatManager()
 
         self._connect_signals()

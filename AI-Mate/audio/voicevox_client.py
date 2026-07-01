@@ -3,7 +3,9 @@ import requests
 
 class VoicevoxClient:
 
-    def __init__(self):
+    def __init__(self, settings):
+
+        self.settings = settings
 
         self.base_url = (
             "http://localhost:50021"
@@ -13,8 +15,12 @@ class VoicevoxClient:
     def create_audio(
         self,
         text,
-        speaker=1
+        speaker=None
     ):
+
+        if speaker is None:
+            speaker = self.settings["speaker"]
+
 
         # 音声合成用パラメータ作成
         query_response = requests.post(

@@ -4,77 +4,82 @@ from pathlib import Path
 
 class SettingsManager:
 
-    DEFAULT_SETTINGS = {
-        "gemini_api_key": "",
-        "volume": 0.8,
-        "character_x": 100,
-        "character_y": 100
-    }
-
     def __init__(self):
 
         self.settings_file = Path(
             "config/settings.json"
         )
 
+        self.settings = self.load_settings()
+
+
     def load_settings(self):
 
         if not self.settings_file.exists():
 
-            self.save_settings(
-                self.DEFAULT_SETTINGS
-            )
+            default = {
+                "character": {
+                    "x": 100,
+                    "y": 100
+                },
 
-            return self.DEFAULT_SETTINGS
+                "voicevox": {
+                    "speaker": 3
+                }
+            }
 
-        try:
+            self.save_settings(default)
 
-            with open(
-                self.settings_file,
-                "r",
-                encoding="utf-8"
-            ) as file:
+            return default
 
-                settings = json.load(file)
 
-            return settings
+        with open(
+            self.settings_file,
+            "r",
+            encoding="utf-8"
+        ) as f:
 
-        except (
-            json.JSONDecodeError,
-            OSError
-        ):
+            return json.load(f)
 
-            return self.DEFAULT_SETTINGS
 
-    def save_settings(self, settings: dict):
+    def save_settings(self, settings=None):
+
+        if settings is None:
+            settings = self.settings
+
 
         with open(
             self.settings_file,
             "w",
             encoding="utf-8"
-        ) as file:
+        ) as f:
 
             json.dump(
                 settings,
-                file,
+                f,
                 indent=4,
                 ensure_ascii=False
             )
-    
-    def save_character_position(self, x: int, y: int):
 
-        settings = self.load_settings()
 
-        settings["character_x"] = x
-        settings["character_y"] = y
-
-        self.save_settings(settings)
-    
     def get_character_position(self):
 
-        settings = self.load_settings()
+        character = self.settings["character"]
 
         return (
-            settings["character_x"],
-            settings["character_y"]
+            character["x"],
+            character["y"]
         )
+
+
+    def save_character_position(self, x, y):
+
+        self.settings["character"]["x"] = x
+        self.settings["character"]["y"] = y
+
+        self.save_settings()
+
+
+    def get_voicevox_settings(self):
+
+        return self.settings["voicevox"]

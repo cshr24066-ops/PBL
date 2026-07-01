@@ -55,10 +55,7 @@ class CharacterDisplay(QLabel):
         
 
     def _setup_window(self):
-        """
-        デスクトップマスコット用設定
-        """
-
+ 
         # タイトルバー非表示
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint
@@ -150,9 +147,8 @@ class CharacterDisplay(QLabel):
             self.exit_requested.emit()
 
     def change_state(self, state):
-        """
-        状態変更
-        """
+
+        print("change: ", state)
 
         self.state = state
 

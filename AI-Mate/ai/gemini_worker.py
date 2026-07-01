@@ -12,17 +12,22 @@ class GeminiWorker(QObject):
     finished = Signal(Message)
     error = Signal(str)
 
-    def __init__(self, gemini_client, text):
+    def __init__(self, gemini_client, history):
         super().__init__()
 
         self.gemini = gemini_client
-        self.text = text
+        self.history = history
 
+    @Slot()
     @Slot()
     def run(self):
 
+        print("worker start")
+
         try:
-            reply = self.gemini.generate(self.text)
+            reply = self.gemini.generate(self.history)
+
+            print("gemini finished")
 
             message = Message(
                 sender="AI",
@@ -30,7 +35,10 @@ class GeminiWorker(QObject):
                 timestamp=datetime.now()
             )
 
+            print("emit finished")
+
             self.finished.emit(message)
 
         except Exception as e:
+            print(e)
             self.error.emit(str(e))

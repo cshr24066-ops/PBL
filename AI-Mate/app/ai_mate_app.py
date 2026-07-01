@@ -8,6 +8,7 @@ from config.settings_manager import SettingsManager
 from chat.chat_manager import ChatManager
 from ai.gemini_client import GeminiClient
 from ai.gemini_worker import GeminiWorker
+from PySide6.QtCore import Qt
 
 class AIMateApp:
 
@@ -29,8 +30,16 @@ class AIMateApp:
 
         self.character = CharacterDisplay(self.gifs)
         self.settings_manager = SettingsManager()
-        self._connect_signals()
         self.chat_manager = ChatManager()
+
+        self._connect_signals()
+
+        self.idle_timer = QTimer()
+        self.idle_timer.setSingleShot(True)
+
+        self.idle_timer.timeout.connect(
+            self.change_idle
+        )
 
     def _connect_signals(self):
 
@@ -107,7 +116,10 @@ class AIMateApp:
 
         # WorkerとThreadを生成
         self.thread = QThread()
-        self.worker = GeminiWorker(self.gemini, text)
+        self.worker = GeminiWorker(
+            self.gemini,
+            self.chat_manager.get_history()
+        )
 
         # Workerを別スレッドへ移動
         self.worker.moveToThread(self.thread)
@@ -116,11 +128,19 @@ class AIMateApp:
         self.thread.started.connect(self.worker.run)
 
         # Worker終了時
-        self.worker.finished.connect(self.on_ai_response)
-
+        self.worker.finished.connect(
+            self.on_ai_response,
+            Qt.ConnectionType.QueuedConnection
+        )
         # エラー時
-        self.worker.error.connect(self.on_ai_error)
+        self.worker.error.connect(
+            self.on_ai_error,
+            Qt.ConnectionType.QueuedConnection
+        )
 
+        self.worker.error.connect(
+            self.thread.quit
+        )
         # 後始末
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
@@ -130,27 +150,56 @@ class AIMateApp:
     
     def on_ai_response(self, message):
 
+        print("on_ai_response start")
+
         self.chat_manager.add_message(message)
 
         self.chat.add_message(message)
 
-        # 会話状態
         self.character.change_state(
             CharacterState.TALKING
         )
 
-        QTimer.singleShot(
-            5000,
-            lambda: self.character.change_state(
-                CharacterState.IDLE
-            )
-    )
-    
+        print("timer start")
+
+        if self.idle_timer.isActive():
+            self.idle_timer.stop()
+
+        self.idle_timer.start(3000)
+
+        print(
+            "response thread:",
+            QThread.currentThread()
+        )
+
+    def change_idle(self):
+
+        print("change idle")
+
+        self.character.change_state(
+            CharacterState.IDLE
+        )
+
+
     def on_ai_error(self, error_message):
 
         print(error_message)
 
+        self.character.change_state(
+        CharacterState.IDLE
+        )
+
     def exit_application(self):
+
+        try:
+            if hasattr(self, "thread") and self.thread.isRunning():
+                self.thread.quit()
+                self.thread.wait()
+
+        except RuntimeError:
+            pass
 
         self.chat.close()
         self.character.close()
+
+        QApplication.quit()

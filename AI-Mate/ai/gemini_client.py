@@ -16,24 +16,32 @@ class GeminiClient:
 
         self.client = genai.Client(api_key=api_key)
 
-    def generate(self, message: str) -> str:
-        """
-        Geminiへメッセージを送信し、応答を取得する
+    def generate(self, history) -> str:
 
-        Parameters
-        ----------
-        message : str
-            ユーザーからの入力
+        contents = []
 
-        Returns
-        -------
-        str
-            Geminiの応答
-        """
+        for message in history:
+
+            role = (
+                "user"
+                if message.sender == "User"
+                else "model"
+            )
+
+            contents.append(
+                {
+                    "role": role,
+                    "parts": [
+                        {
+                            "text": message.text
+                        }
+                    ]
+                }
+            )
 
         response = self.client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=message,
+            contents=contents,
         )
 
         return response.text

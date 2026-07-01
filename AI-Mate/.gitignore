@@ -22,3 +22,5 @@ config/settings.json
 logs/
 
 data/
+
+assets/

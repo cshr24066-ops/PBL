@@ -72,19 +72,7 @@ class AIMateApp:
 
         self.character.show()
 
-        QTimer.singleShot(
-            3000,
-            lambda: self.character.change_state(
-                CharacterState.THINKING
-            )
-        )
-
-        QTimer.singleShot(
-            6000,
-            lambda: self.character.change_state(
-                CharacterState.TALKING
-            )
-        )
+       
     
     def save_character_position(
         self,
@@ -111,6 +99,11 @@ class AIMateApp:
         # ユーザーメッセージを表示
         user_message = self.chat_manager.create_user_message(text)
         self.chat.add_message(user_message)
+
+            # 考え中状態
+        self.character.change_state(
+            CharacterState.THINKING
+        )
 
         # WorkerとThreadを生成
         self.thread = QThread()
@@ -140,6 +133,18 @@ class AIMateApp:
         self.chat_manager.add_message(message)
 
         self.chat.add_message(message)
+
+        # 会話状態
+        self.character.change_state(
+            CharacterState.TALKING
+        )
+
+        QTimer.singleShot(
+            5000,
+            lambda: self.character.change_state(
+                CharacterState.IDLE
+            )
+    )
     
     def on_ai_error(self, error_message):
 

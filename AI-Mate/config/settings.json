@@ -1,11 +1,15 @@
 {
-    "gemini_api_key": "",
-    "character_x": 418,
-    "character_y": 124,
-    "speaker": 3,
-    "speed": 1.0,
-    "pitch": 0.0,
-    "intonation": 1.0,
-    "volume": 1.0
+    "character": {
+        "x": 510,
+        "y": 224
+    },
+    "voicevox": {
+        "speaker": 3,
+        "speed": 1.0,
+        "pitch": 0.0,
+        "volume": 1.0
+    },
+    "application": {
+        "always_on_top": true
+    }
 }
-

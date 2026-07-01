@@ -2,12 +2,11 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from chat.message import Message
 from datetime import datetime
+from config.logger import get_logger
 
+logger = get_logger(__name__)
 
 class GeminiWorker(QObject):
-    """
-    Gemini APIとの通信を別スレッドで行うWorker
-    """
 
     finished = Signal(Message)
     error = Signal(str)
@@ -22,7 +21,7 @@ class GeminiWorker(QObject):
     @Slot()
     def run(self):
 
-        print("worker start")
+        logger.info("Gemini worker start")
 
         try:
             reply = self.gemini.generate(self.history)
@@ -39,14 +38,14 @@ class GeminiWorker(QObject):
 
             self.finished.emit(message)
 
-        except Exception as e:
+        except Exception:
 
-            print(e)
+            logger.error(
+                "Gemini API error",
+                exc_info=True
+            )
 
-            error_message = self.convert_error_message(e)
-
-            self.error.emit(error_message)
-    
+  
     def convert_error_message(self, error):
 
         error_text = str(error)

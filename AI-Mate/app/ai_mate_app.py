@@ -13,6 +13,9 @@ from datetime import datetime
 from audio.voicevox_worker import VoicevoxWorker
 from audio.voicevox_client import VoicevoxClient
 from audio.audio_player import AudioPlayer
+from config.logger import get_logger
+
+logger = get_logger(__name__)
 
 class AIMateApp:
 
@@ -107,8 +110,9 @@ class AIMateApp:
     state
     ):
 
-        print(state)
-    
+        logger.info(
+            f"Character state changed: {state}"
+        )    
 
 
     def on_message_sent(self, text):
@@ -181,7 +185,7 @@ class AIMateApp:
 
     def on_ai_error(self, error_message):
 
-        print("on_ai_error called")
+        logger = get_logger(__name__)
 
         self.is_processing = False
 

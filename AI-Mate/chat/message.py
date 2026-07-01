@@ -6,7 +6,5 @@ from datetime import datetime
 class Message:
 
     sender: str
-
     text: str
-
     timestamp: datetime

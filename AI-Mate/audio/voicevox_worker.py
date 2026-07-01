@@ -1,5 +1,7 @@
 from PySide6.QtCore import QObject, Signal, Slot
+from config.logger import get_logger
 
+logger = get_logger(__name__)
 
 class VoicevoxWorker(QObject):
     """
@@ -33,9 +35,8 @@ class VoicevoxWorker(QObject):
                 self.text
             )
 
-            print(
-                "voicevox finished:",
-                filename
+            logger.info(
+                f"VOICEVOX finished: {filename}"
             )
 
             self.finished.emit(

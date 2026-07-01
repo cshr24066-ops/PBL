@@ -1,0 +1,8 @@
+2026-07-02 01:16:52,096 [INFO] app.ai_mate_app: Character state changed: CharacterState.THINKING
+2026-07-02 01:19:22,490 [INFO] app.ai_mate_app: Character state changed: CharacterState.THINKING
+2026-07-02 01:19:22,492 [INFO] ai.gemini_worker: Gemini worker start
+2026-07-02 01:19:22,492 [INFO] google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-02 01:19:24,801 [INFO] httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-07-02 01:19:24,830 [INFO] app.ai_mate_app: Character state changed: CharacterState.TALKING
+2026-07-02 01:19:27,067 [INFO] audio.voicevox_worker: VOICEVOX finished: voice.wav
+2026-07-02 01:19:28,863 [INFO] app.ai_mate_app: Character state changed: CharacterState.IDLE

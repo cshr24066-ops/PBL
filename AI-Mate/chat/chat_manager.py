@@ -4,11 +4,11 @@ from chat.message import Message
 
 class ChatManager:
 
-    MAX_HISTORY = 10
+    def __init__(self, max_history=10):
 
-    def __init__(self):
         self.messages = []
 
+        self.max_history = max_history
 
     def create_user_message(self, text):
 
@@ -30,10 +30,11 @@ class ChatManager:
 
     def get_history(self):
 
+        return self.messages[-self.max_history:]
+    
         print(
-        "送信履歴数:",
-        len(self.messages[-self.MAX_HISTORY:])
+            "Gemini送信履歴:",
+            len(history)
         )
 
-
-        return self.messages[-self.MAX_HISTORY:]
+        return history

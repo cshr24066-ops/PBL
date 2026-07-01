@@ -1,5 +1,4 @@
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QTimer
 from PySide6.QtCore import QThread
 from character.character_display import CharacterDisplay
 from character.character_state import CharacterState
@@ -9,11 +8,18 @@ from chat.chat_manager import ChatManager
 from ai.gemini_client import GeminiClient
 from ai.gemini_worker import GeminiWorker
 from PySide6.QtCore import Qt
+from chat.message import Message
+from datetime import datetime
+from audio.voicevox_worker import VoicevoxWorker
+from audio.voicevox_client import VoicevoxClient
+from audio.audio_player import AudioPlayer
 
 class AIMateApp:
 
     def __init__(self):
         self.gemini = GeminiClient()
+        self.voicevox = VoicevoxClient()
+        self.audio_player = AudioPlayer()
 
         self.chat = ChatWindow()
 
@@ -34,12 +40,8 @@ class AIMateApp:
 
         self._connect_signals()
 
-        self.idle_timer = QTimer()
-        self.idle_timer.setSingleShot(True)
+        self.is_processing = False
 
-        self.idle_timer.timeout.connect(
-            self.change_idle
-        )
 
     def _connect_signals(self):
 
@@ -61,6 +63,9 @@ class AIMateApp:
         )
         self.chat.send_requested.connect(
             self.on_message_sent
+        )
+        self.audio_player.finished.connect(
+            self.on_voice_finished
         )
 
     def toggle_chat(self):
@@ -104,6 +109,14 @@ class AIMateApp:
 
 
     def on_message_sent(self, text):
+        if self.is_processing:
+
+            print(
+                "処理中のため送信停止"
+            )
+
+            return
+        self.is_processing = True
 
         # ユーザーメッセージを表示
         user_message = self.chat_manager.create_user_message(text)
@@ -138,9 +151,6 @@ class AIMateApp:
             Qt.ConnectionType.QueuedConnection
         )
 
-        self.worker.error.connect(
-            self.thread.quit
-        )
         # 後始末
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
@@ -153,42 +163,113 @@ class AIMateApp:
         print("on_ai_response start")
 
         self.chat_manager.add_message(message)
-
         self.chat.add_message(message)
 
         self.character.change_state(
             CharacterState.TALKING
         )
 
-        print("timer start")
-
-        if self.idle_timer.isActive():
-            self.idle_timer.stop()
-
-        self.idle_timer.start(3000)
-
-        print(
-            "response thread:",
-            QThread.currentThread()
+        self.start_voice(
+            message.text
         )
 
-    def change_idle(self):
+        if self.thread.isRunning():
+            self.thread.quit()
 
-        print("change idle")
+    def on_ai_error(self, error_message):
+
+        print("on_ai_error called")
+
+        self.is_processing = False
+
+        error = Message(
+            sender="AI",
+            text="現在、AIサービスの利用制限中です。\nしばらく待ってから再試行してください。",
+            timestamp=datetime.now()
+        )
+
+        self.chat.add_message(error)
 
         self.character.change_state(
             CharacterState.IDLE
         )
 
+        if self.thread.isRunning():
+            self.thread.quit()
 
-    def on_ai_error(self, error_message):
+    def on_voice_error(self, error_message):
 
-        print(error_message)
-
-        self.character.change_state(
-        CharacterState.IDLE
+        print(
+            "VOICEVOX ERROR:",
+            error_message
         )
 
+        self.is_processing = False
+
+        self.character.change_state(
+            CharacterState.IDLE
+        )
+    def start_voice(self, text):
+        self.is_processing = True
+        self.voice_thread = QThread()
+
+        self.voice_worker = VoicevoxWorker(
+            self.voicevox,
+            text
+        )
+
+        self.voice_worker.moveToThread(
+            self.voice_thread
+        )
+
+
+        self.voice_thread.started.connect(
+            self.voice_worker.run
+        )
+
+
+        self.voice_worker.finished.connect(
+            self.play_voice
+        )
+
+
+        self.voice_worker.error.connect(
+            self.on_voice_error
+        )
+
+
+        self.voice_worker.finished.connect(
+            self.voice_thread.quit
+        )
+
+        self.voice_worker.finished.connect(
+            self.voice_worker.deleteLater
+        )
+
+        self.voice_thread.finished.connect(
+            self.voice_thread.deleteLater
+        )
+
+
+        self.voice_thread.start()
+
+    def play_voice(self, filename):
+
+        self.audio_player.play(
+            filename
+        )
+
+    def on_voice_finished(self):
+
+        print(
+            "voice finished"
+        )
+
+        self.is_processing = False
+
+        self.character.change_state(
+            CharacterState.IDLE
+        )
     def exit_application(self):
 
         try:
@@ -199,6 +280,12 @@ class AIMateApp:
         except RuntimeError:
             pass
 
+        if hasattr(self, "voice_thread"):
+
+            if self.voice_thread.isRunning():
+                self.voice_thread.quit()
+                self.voice_thread.wait()
+                
         self.chat.close()
         self.character.close()
 

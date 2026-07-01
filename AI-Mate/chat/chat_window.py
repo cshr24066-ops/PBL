@@ -57,14 +57,19 @@ class ChatWindow(QWidget):
 
         for message in history:
 
-            self.append_message(message)
-            
-    def append_message(self, message):
-
-        self.history_area.append(
-            f"{message.sender}: {message.text}"
-        )
+            self.add_message(message)
     
     def on_send_button_clicked(self):
 
         self.input_box.submit()
+    
+    def add_message(self, message):
+
+        if message.sender == "User":
+            sender = "あなた"
+        else:
+            sender = "AI"
+
+        self.history_area.append(
+            f"{sender}: {message.text}"
+        )

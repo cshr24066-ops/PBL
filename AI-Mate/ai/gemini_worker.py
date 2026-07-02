@@ -1,10 +1,12 @@
+from datetime import datetime
+
 from PySide6.QtCore import QObject, Signal, Slot
 
 from chat.message import Message
-from datetime import datetime
 from config.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class GeminiWorker(QObject):
 
@@ -18,7 +20,6 @@ class GeminiWorker(QObject):
         self.history = history
 
     @Slot()
-    @Slot()
     def run(self):
 
         logger.info("Gemini worker start")
@@ -26,50 +27,47 @@ class GeminiWorker(QObject):
         try:
             reply = self.gemini.generate(self.history)
 
-            print("gemini finished")
-
             message = Message(
                 sender="AI",
                 text=reply,
                 timestamp=datetime.now()
             )
 
-            print("emit finished")
-
             self.finished.emit(message)
 
-        except Exception:
+        except Exception as e:
 
             logger.error(
                 "Gemini API error",
                 exc_info=True
             )
 
-  
+            # エラーメッセージを変換してGUIへ通知
+            self.error.emit(
+                self.convert_error_message(e)
+            )
+
     def convert_error_message(self, error):
 
         error_text = str(error)
 
         if "429" in error_text:
             return (
-                "現在、AIの利用制限中です。\n"
-                "しばらく待ってから再試行してください。"
+                "現在、AIサービスの利用上限に達しています。\n"
+                "しばらく時間をおいてから再試行してください。"
             )
 
         elif "401" in error_text:
             return (
-                "APIキーが正しく設定されていません。\n"
-                "設定を確認してください。"
+                "APIキーが正しく設定されていません。"
             )
 
         elif "400" in error_text:
             return (
-                "送信内容に問題があります。\n"
-                "入力内容を確認してください。"
+                "送信内容に問題があります。"
             )
 
         else:
             return (
-                "AIとの通信中にエラーが発生しました。\n"
-                "もう一度試してください。"
+                "AIとの通信中にエラーが発生しました。"
             )

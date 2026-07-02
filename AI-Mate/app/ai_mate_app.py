@@ -14,6 +14,7 @@ from audio.voicevox_worker import VoicevoxWorker
 from audio.voicevox_client import VoicevoxClient
 from audio.audio_player import AudioPlayer
 from config.logger import get_logger
+from audio.voicevox_engine import VoiceVoxEngine
 
 logger = get_logger(__name__)
 
@@ -22,7 +23,12 @@ class AIMateApp:
     def __init__(self):
         self.gemini = GeminiClient()
         self.settings_manager = SettingsManager()
-
+        self.voicevox_engine = VoiceVoxEngine()
+        try:
+          self.voicevox_engine.start()
+        except Exception as e:
+            logger.exception(e)
+        
         self.voicevox = VoicevoxClient(
             self.settings_manager.get_voicevox_settings()
         )
@@ -185,13 +191,11 @@ class AIMateApp:
 
     def on_ai_error(self, error_message):
 
-        logger = get_logger(__name__)
-
         self.is_processing = False
 
         error = Message(
             sender="AI",
-            text="現在、AIサービスの利用制限中です。\nしばらく待ってから再試行してください。",
+            text=error_message,
             timestamp=datetime.now()
         )
 
@@ -201,9 +205,9 @@ class AIMateApp:
             CharacterState.IDLE
         )
 
-        if self.thread.isRunning():
+        if hasattr(self, "thread") and self.thread.isRunning():
             self.thread.quit()
-
+            
     def on_voice_error(self, error_message):
 
         print(
@@ -288,12 +292,18 @@ class AIMateApp:
             pass
 
         if hasattr(self, "voice_thread"):
-
             if self.voice_thread.isRunning():
                 self.voice_thread.quit()
                 self.voice_thread.wait()
-                
+
+        # VOICEVOX Engineを終了
+        self.voicevox_engine.stop()
+
         self.chat.close()
         self.character.close()
 
         QApplication.quit()
+            
+    def stop(self):
+
+        self.voicevox_engine.stop()

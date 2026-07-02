@@ -1,5 +1,4 @@
 import sys
-
 from PySide6.QtWidgets import QApplication
 
 from app.ai_mate_app import AIMateApp
@@ -16,4 +15,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        print("=== ERROR ===")
+        print(traceback.format_exc())
+        input("Press Enter to exit...")

@@ -13,10 +13,13 @@ class GeminiWorker(QObject):
     finished = Signal(Message)
     error = Signal(str)
 
-    def __init__(self, gemini_client, history):
+    def __init__(self, gemini_client):
         super().__init__()
 
         self.gemini = gemini_client
+        self.history = []
+
+    def set_history(self, history):
         self.history = history
 
     @Slot()
@@ -25,7 +28,10 @@ class GeminiWorker(QObject):
         logger.info("Gemini worker start")
 
         try:
-            reply = self.gemini.generate(self.history)
+
+            reply = self.gemini.generate(
+                self.history
+            )
 
             message = Message(
                 sender="AI",
@@ -33,16 +39,16 @@ class GeminiWorker(QObject):
                 timestamp=datetime.now()
             )
 
-            self.finished.emit(message)
+            self.finished.emit(
+                message
+            )
 
         except Exception as e:
 
-            logger.error(
-                "Gemini API error",
-                exc_info=True
+            logger.exception(
+                "Gemini API error"
             )
 
-            # エラーメッセージを変換してGUIへ通知
             self.error.emit(
                 self.convert_error_message(e)
             )
@@ -67,7 +73,6 @@ class GeminiWorker(QObject):
                 "送信内容に問題があります。"
             )
 
-        else:
-            return (
-                "AIとの通信中にエラーが発生しました。"
-            )
+        return (
+            "AIとの通信中にエラーが発生しました。"
+        )

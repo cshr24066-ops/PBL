@@ -6,7 +6,8 @@ from PySide6.QtMultimedia import (
 from PySide6.QtCore import (
     QUrl,
     QObject,
-    Signal
+    Signal,
+    Slot
 )
 
 
@@ -54,3 +55,7 @@ class AudioPlayer(QObject):
             )
 
             self.finished.emit()
+    
+    @Slot(str)
+    def play_file(self, filename):
+        self.play(filename)

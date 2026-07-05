@@ -68,13 +68,9 @@ class VoiceVoxEngine:
         logger.info(
             "VOICEVOX Engineを起動します。"
         )
-
         self.process = subprocess.Popen(
             [str(self.engine_path)],
-            cwd=str(self.engine_path.parent),  # ★超重要
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
+            cwd=str(self.engine_path.parent)
         )
         time.sleep(2)  # ★追加（超重要：起動猶予）
         self.started_by_app = True
@@ -86,27 +82,26 @@ class VoiceVoxEngine:
         )
 
     def wait_until_ready(self, timeout=30):
-        """
-        VOICEVOXの起動待ち（安定版）
-        """
 
         start = time.time()
 
         while time.time() - start < timeout:
 
-            # プロセスが死んでいないか確認
             if self.process is not None:
-                if self.process.poll() is not None:
-                    raise RuntimeError("VOICEVOX Engineが異常終了しました")
 
-            # APIが生きているか確認
+                code = self.process.poll()
+
+                if code is not None:
+                    raise RuntimeError(
+                        f"VOICEVOX Engineが終了しました (exit code={code})"
+                    )
+
             if self.is_running():
                 return
 
-            time.sleep(1)  # ★ここ重要（0.5→1秒で安定化）
+            time.sleep(1)
 
         raise TimeoutError("VOICEVOX起動タイムアウト")
-
     def stop(self):
         """
         AI Mateが起動したEngineのみ終了

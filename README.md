@@ -44,7 +44,6 @@
 | 音声合成    | VOICEVOX Engine |
 | 通信      | requests        |
 | キャラクタ表示 | GIF画像           |
-| 実行形式    | PyInstaller
 
 ## 非目標
 

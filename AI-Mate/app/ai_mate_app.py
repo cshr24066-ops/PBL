@@ -21,6 +21,9 @@ from chat.message import Message
 from config.logger import get_logger
 from config.settings_manager import SettingsManager
 
+import shutil
+from pathlib import Path
+
 logger = get_logger(__name__)
 
 
@@ -293,6 +296,11 @@ class AIMateApp:
         self.chat.close()
         self.character.close()
 
+        temp_dir = Path("temp")
+
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
+
         QApplication.quit()
 
     def stop(self):
@@ -306,3 +314,9 @@ class AIMateApp:
             self.voice_thread.wait()
 
         self.voicevox_engine.stop()
+
+        # 一時音声ファイル削除
+        temp_dir = Path("temp")
+
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)

@@ -32,13 +32,32 @@ class AudioPlayer(QObject):
         self.player.mediaStatusChanged.connect(
             self.on_media_status_changed
         )
+        
+        self.player.positionChanged.connect(
+            lambda p: print("position =", p)
+        )
+
+        self.player.durationChanged.connect(
+            lambda d: print("duration =", d)
+        )
+
+        self.player.errorOccurred.connect(
+            lambda: print(
+                self.player.error(),
+                self.player.errorString()
+            )
+        )
 
 
     def play(self, filename):
 
+        print("duration before =", self.player.duration())
+
         self.player.setSource(
             QUrl.fromLocalFile(filename)
         )
+
+        print("duration after setSource =", self.player.duration())
 
         self.player.play()
 

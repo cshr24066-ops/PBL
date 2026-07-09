@@ -7,8 +7,6 @@ from PySide6.QtCore import (
     Signal
 )
 
-from PySide6.QtGui import QMovie
-
 from PySide6.QtWidgets import (
     QLabel,
     QMenu
@@ -16,6 +14,7 @@ from PySide6.QtWidgets import (
 
 from character.character_state import CharacterState
 from config.settings_manager import SettingsManager
+from PySide6.QtGui import QMovie, QGuiApplication
 
 
 class CharacterDisplay(QLabel):
@@ -38,7 +37,7 @@ class CharacterDisplay(QLabel):
 
         self.image_paths = image_paths
 
-        self.character_size = QSize(150, 150)
+        self.character_size = QSize(108, 165)
 
         # ドラッグ用
         self.drag_position = QPoint()
@@ -95,8 +94,49 @@ class CharacterDisplay(QLabel):
 
         self._set_movie(str(image_file))
         x, y = self.settings_manager.get_character_position()
-        self.move(x, y)
 
+        pos = self._clamp_position(
+            QPoint(x, y)
+        )
+
+        self.move(pos)
+
+    def _clamp_position(self, pos: QPoint) -> QPoint:
+        """
+        キャラクターが完全に画面外へ出ないように座標を補正
+        """
+
+        screen = QGuiApplication.screenAt(pos)
+
+        if screen is None:
+            screen = QGuiApplication.primaryScreen()
+
+        geometry = screen.availableGeometry()
+
+        # この分だけ画面内に残す
+        VISIBLE_WIDTH = 60
+        VISIBLE_HEIGHT = 10
+
+        x = max(
+            geometry.left() - self.width() + VISIBLE_WIDTH,
+            min(
+                pos.x(),
+                geometry.right() - VISIBLE_WIDTH
+            )
+        )
+
+        y = max(
+            geometry.top(),
+            min(
+                pos.y(),
+                geometry.bottom() - VISIBLE_HEIGHT
+            )
+        )
+
+        return QPoint(x, y)
+
+
+        
     def mousePressEvent(self, event):
 
         if event.button() == Qt.MouseButton.LeftButton:
@@ -108,10 +148,14 @@ class CharacterDisplay(QLabel):
     def mouseMoveEvent(self, event):
 
         if event.buttons() & Qt.MouseButton.LeftButton:
-            self.move(
+            new_pos = (
                 event.globalPosition().toPoint()
                 - self.drag_position
             )
+
+            new_pos = self._clamp_position(new_pos)
+
+            self.move(new_pos)
 
         self.dragging = True
 

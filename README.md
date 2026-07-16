@@ -1,5 +1,7 @@
 # AI mate
 
+解説動画はこちらから　>> https://youtu.be/SJTmxEH60yU
+
 # 目次
 
 ・概要
